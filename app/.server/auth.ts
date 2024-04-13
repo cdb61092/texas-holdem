@@ -11,7 +11,7 @@ import { ActionFunctionArgs } from "@remix-run/node";
 // strategies will return and will store in the session
 export const authenticator = new Authenticator<User>(sessionStorage);
 
-const hashPassword = async (password: string) => {
+export const hashPassword = async (password: string) => {
   const salt = await bcrypt.genSalt(10);
   return await bcrypt.hash(password, salt);
 };

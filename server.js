@@ -4,13 +4,6 @@ import { createServer } from "http";
 import { Server } from "socket.io";
 import compression from "compression";
 import morgan from "morgan";
-import * as path from "path";
-
-const MODE = process.env.NODE_ENV;
-const BUILD_DIR = path.join(process.cwd(), "server/build");
-
-// // notice that the result of `remix vite:build` is "just a module"
-// import * as build from "./build/server/index.js";
 
 const viteDevServer =
   process.env.NODE_ENV === "production"
@@ -31,17 +24,20 @@ const io = new Server(httpServer);
 
 // then list to the connection event and get a socket object
 io.on("connection", (socket) => {
-  // here you can do whatever you want with the socket of the client, in this
-  // example I'm logging the socket.id of the client
-  console.log(socket.id, "connected");
-  // and I emit an event to the client called `event` with a simple message
-  socket.emit("event", "connected!");
-  // and I start listening for the event `something`
-  socket.on("something", (data) => {
-    // log the data together with the socket.id who send it
-    console.log(socket.id, data);
-    // and emeit the event again with the message pong
-    socket.emit("event", "pong");
+  console.log("A user connected");
+
+  socket.on("join room", (tableId) => {
+    socket.join(tableId);
+    console.log(`User joined room ${tableId}`);
+  });
+
+  socket.on("chat message", async (msg) => {
+    io.to(msg.tableId).emit("chat message", msg);
+    console.log(`Message sent in room ${msg.tableId}: ${msg.message}`);
+  });
+
+  socket.on("disconnect", () => {
+    console.log("User disconnected");
   });
 });
 

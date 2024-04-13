@@ -19,6 +19,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "~/components/ui/avatar";
 import invariant from "tiny-invariant";
 import React from "react";
 import { wsContext } from "~/ws.context";
+import { Chat } from "~/components/Chat";
 
 export async function action({ request, params }: ActionFunctionArgs) {
   const userId = await requireUserId(request);
@@ -44,6 +45,12 @@ export async function action({ request, params }: ActionFunctionArgs) {
 
 export async function loader({ params, request }: LoaderFunctionArgs) {
   const userId = await requireUserId(request);
+  const user = await prisma.user.findUnique({
+    where: {
+      id: userId,
+    },
+  });
+  console.log("userId", userId);
   const tableId = params.id;
   const table = await prisma.table.findUnique({
     where: {
@@ -59,11 +66,11 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
     },
   });
 
-  return json(table);
+  return json({ table, user });
 }
 
 export default function Table() {
-  const table = useLoaderData<typeof loader>();
+  const { table, user } = useLoaderData<typeof loader>();
   // const updatedTable = useActionData<typeof action>()
   console.log(table);
 
@@ -110,6 +117,7 @@ export default function Table() {
           );
         })}
       </div>
+      <Chat tableId={table?.id || ""} user={user} />
     </div>
   );
 }
