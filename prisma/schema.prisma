@@ -1,0 +1,58 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String   @id @default(cuid())
+  email          String   @unique
+  displayName    String?
+  password       String
+  currentTable   Table?   @relation(fields: [currentTableId], references: [id])
+  currentTableId String?
+  currentSeat    Seat?    @relation(fields: [currentSeatId], references: [id])
+  currentSeatId  String?  @unique
+  balance        Float    @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model Table {
+  id         String      @id @default(cuid())
+  name       String
+  smallBlind Float
+  bigBlind   Float
+  maxPlayers Int
+  players    User[]
+  seats      Seat[]
+  status     TableStatus
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+}
+
+model Seat {
+  id        String   @id @default(cuid())
+  number    Int // Seat number at the table
+  table     Table    @relation(fields: [tableId], references: [id])
+  tableId   String // Foreign key for Table
+  player    User?
+  occupied  Boolean  @default(false) // Indicates if the seat is taken
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum TableStatus {
+  WAITING
+  PLAYING
+  FINISHED
+}
