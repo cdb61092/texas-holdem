@@ -1,19 +1,8 @@
-import {
-  Form,
-  useActionData,
-  useLoaderData,
-  useParams,
-} from "@remix-run/react";
+import { useLoaderData } from "@remix-run/react";
 import { prisma } from "~/.server/prisma/prisma";
-import {
-  ActionFunction,
-  ActionFunctionArgs,
-  ActionArgs,
-  json,
-  LoaderFunctionArgs,
-} from "@remix-run/node";
+import { ActionFunctionArgs, json, LoaderFunctionArgs } from "@remix-run/node";
 import { Button } from "~/components/ui/button";
-import { authenticator, requireUser, requireUserId } from "~/.server/auth";
+import { requireUserId } from "~/.server/auth";
 import { leaveSeat, seatPlayer } from "~/.server/prisma/tables";
 import { Avatar, AvatarImage, AvatarFallback } from "~/components/ui/avatar";
 import invariant from "tiny-invariant";
@@ -50,6 +39,8 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
       id: userId,
     },
   });
+
+  invariant(user, "User not found");
   console.log("userId", userId);
   const tableId = params.id;
   const table = await prisma.table.findUnique({
@@ -65,6 +56,8 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
       },
     },
   });
+
+  invariant(table, "Table not found");
 
   return json({ table, user });
 }
@@ -85,18 +78,23 @@ export default function Table() {
     socket.emit("something", "ping");
   }, [socket]);
 
+  const joinTable = async () => {
+    if (!socket) return;
+    socket.emit("join table", { table, user });
+  };
+
   return (
     <div>
       Table {table?.id}
       <div>
-        <Form method="post">
-          <input type="hidden" name="action" value="sit" />
-          <Button type="submit">Sit Down</Button>
-        </Form>
-        <Form method="post">
-          <input type="hidden" name="action" value="leave" />
+        <div>
+          <Button type="submit" onClick={() => joinTable()}>
+            Sit Down
+          </Button>
+        </div>
+        <div>
           <Button type="submit">Leave Seat</Button>
-        </Form>
+        </div>
       </div>
       <div>
         {table?.seats.map((seat) => {
