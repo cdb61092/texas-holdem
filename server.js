@@ -4,6 +4,9 @@ import { createServer } from "http";
 import { Server } from "socket.io";
 import compression from "compression";
 import morgan from "morgan";
+import { createPokerGameState } from "/app/lib/poker/functional/pokerGame.ts";
+import { prisma } from "app/.server/prisma/prisma";
+import { createPlayer } from "/app/lib/poker/functional/player.ts";
 
 const viteDevServer =
   process.env.NODE_ENV === "production"
@@ -22,13 +25,42 @@ const httpServer = createServer(app);
 // Create the socket.io server from the httpServer.
 const io = new Server(httpServer);
 
+const gameStates = {}; // Object to store the state of each game
+const userMap = new Map(); // Map to store user data by socket.id
+
 // then list to the connection event and get a socket object
 io.on("connection", (socket) => {
   console.log("A user connected");
 
-  socket.on("join room", (tableId) => {
+  socket.on("join table", (table, user) => {
+    const tableId = table.id;
+
+    // Join the room for the table.
     socket.join(tableId);
-    console.log(`User joined room ${tableId}`);
+
+    // Store user data in the map when they join
+    userMap.set(socket.id, { user: user, tableId });
+
+    const room = io.sockets.adapter.rooms.get(tableId);
+    const numberOfClients = room ? room.size : 0;
+    console.log(
+      `User joined room ${tableId}. Number of players: ${numberOfClients}`,
+    );
+
+    if (numberOfClients >= 2) {
+      io.to(tableId).emit("start game", { tableId });
+
+      // Initialize the game state if it doesn't exist
+      if (!gameStates[tableId]) {
+        const users = Array.from(room).map(
+          (socketId) => userMap.get(socketId).user.id,
+        );
+        const players = users.map((user) =>
+          createPlayer(user.id, user.displayName, user.balance),
+        );
+        gameStates[tableId] = createPokerGameState(players);
+      }
+    }
   });
 
   socket.on("chat message", async (msg) => {
@@ -37,7 +69,12 @@ io.on("connection", (socket) => {
   });
 
   socket.on("disconnect", () => {
-    console.log("User disconnected");
+    if (userMap.has(socket.id)) {
+      const userData = userMap.get(socket.id);
+      userMap.delete(socket.id);
+      console.log(`User ${userData.userId} disconnected`);
+      // Additional cleanup logic can go here
+    }
   });
 });
 
