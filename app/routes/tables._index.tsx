@@ -23,8 +23,6 @@ export async function loader() {
 
 export default function Tables() {
   const tables = useLoaderData<typeof loader>();
-  console.log("tables");
-  console.log(tables);
 
   return (
     <div className="max-w-[800px] mx-auto">
@@ -36,7 +34,7 @@ export default function Tables() {
             <TableHead>Small Blind</TableHead>
             <TableHead>Big Blind</TableHead>
             <TableHead>Players</TableHead>
-            <TableHead className="text-right">Join Table</TableHead>
+            <TableHead className="text-right">View Table</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -50,7 +48,7 @@ export default function Tables() {
                   {table.players.length} / {table.maxPlayers}
                 </TableCell>
                 <TableCell className="text-right">
-                  <a href={`/tables/${table.id}`}>Join Table</a>
+                  <a href={`/tables/${table.id}`}>View</a>
                 </TableCell>
               </TableRow>
             );

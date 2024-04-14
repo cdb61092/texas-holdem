@@ -23,6 +23,7 @@ model User {
   currentSeat    Seat?    @relation(fields: [currentSeatId], references: [id])
   currentSeatId  String?  @unique
   balance        Float    @default(0)
+  avatar         String?  @default("aces.png")
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 }

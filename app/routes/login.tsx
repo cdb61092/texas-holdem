@@ -2,7 +2,7 @@ import type { ActionFunctionArgs } from "@remix-run/node";
 import { useActionData, Form } from "@remix-run/react";
 import { authenticator } from "~/.server/auth";
 import { useForm } from "@conform-to/react";
-import { parseWithZod, getZodConstraint } from "@conform-to/zod";
+import { getZodConstraint } from "@conform-to/zod";
 import { z } from "zod";
 import { Input } from "~/components/ui/input";
 import { Card, CardContent } from "~/components/ui/card";
@@ -37,8 +37,8 @@ export default function Login() {
     <div className="flex w-full justify-center">
       <Card className="max-w-full w-[340px] mt-[100px]">
         <CardContent className="overflow-hidden">
-          <Tabs aria-label="Tabs form" defaultValue="login">
-            <TabsList>
+          <Tabs aria-label="Tabs form" defaultValue="login" className="mt-2">
+            <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="login">Login</TabsTrigger>
               <TabsTrigger value="register">Register</TabsTrigger>
             </TabsList>

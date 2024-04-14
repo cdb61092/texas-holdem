@@ -4,91 +4,86 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
+  useLoaderData,
+  LiveReload,
 } from "@remix-run/react";
-import { LinksFunction } from "@remix-run/node";
+import { LinksFunction, LoaderFunctionArgs } from "@remix-run/node";
 // @ts-expect-error vite requires the ?url to be present
-import stylesheet from "./tailwind.css?url";
+import stylesheet from "./globals.css?url";
 import React from "react";
-// import { ethers } from "ethers";
-import {
-  NavigationMenu,
-  NavigationMenuList,
-  NavigationMenuItem,
-  NavigationMenuContent,
-  NavigationMenuTrigger,
-  NavigationMenuLink,
-  navigationMenuTriggerStyle,
-} from "~/components/ui/navigation-menu";
-import { Socket, connect } from "socket.io-client";
+import { Socket as IOSocket, connect } from "socket.io-client";
 import { wsContext } from "~/ws.context";
+import { Navigation } from "~/components/Navigation";
+import { authenticator } from "~/.server/auth";
+import clsx from "clsx";
+import {
+  PreventFlashOnWrongTheme,
+  ThemeProvider,
+  useTheme,
+} from "remix-themes";
+import { themeSessionResolver } from "./sessions.server";
 
 export const links: LinksFunction = () => [
   { rel: "stylesheet", href: stylesheet },
 ];
 
-export function Layout({ children }: { children: React.ReactNode }) {
-  return (
-    <html lang="en">
-      <head>
-        <meta charSet="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <Meta />
-        <Links />
-      </head>
-      <body>
-        <NavigationMenu>
-          <NavigationMenuList>
-            <NavigationMenuItem>
-              <NavigationMenuLink asChild>
-                <a
-                  className="flex h-full w-full select-none flex-col justify-end rounded-md bg-gradient-to-b from-muted/50 to-muted p-6 no-underline outline-none focus:shadow-md"
-                  href="/profile"
-                >
-                  Profile
-                </a>
-              </NavigationMenuLink>
-            </NavigationMenuItem>
-            <NavigationMenuItem>
-              <NavigationMenuLink asChild>
-                <a
-                  className="flex h-full w-full select-none flex-col justify-end rounded-md bg-gradient-to-b from-muted/50 to-muted p-6 no-underline outline-none focus:shadow-md"
-                  href="/tables"
-                >
-                  Tables
-                </a>
-              </NavigationMenuLink>
-            </NavigationMenuItem>
-          </NavigationMenuList>
-        </NavigationMenu>
-        {children}
-        <ScrollRestoration />
-        <Scripts />
-      </body>
-    </html>
-  );
+export async function loader({ request }: LoaderFunctionArgs) {
+  const user = await authenticator.isAuthenticated(request);
+  console.log(user);
+  const { getTheme } = await themeSessionResolver(request);
+  return {
+    theme: getTheme(),
+  };
 }
 
-export default function App() {
-  const [socket, setSocket] = React.useState<Socket>();
+export default function AppWithProviders() {
+  const data = useLoaderData<typeof loader>();
+  const [socket, setSocket] = React.useState<IOSocket>();
 
   React.useEffect(() => {
     const connection = connect();
+    console.log("setting socket in root.tsx");
+    console.log(connection);
     setSocket(connection);
     return () => {
       connection.close();
     };
   }, []);
 
-  React.useEffect(() => {
-    if (!socket) return;
-    socket.on("event", (data) => {
-      console.log(data);
-    });
-  }, [socket]);
-
   return (
     <wsContext.Provider value={socket}>
-      <Outlet />
+      <ThemeProvider
+        specifiedTheme={data.theme}
+        themeAction="/action/set-theme"
+      >
+        <App />
+      </ThemeProvider>
     </wsContext.Provider>
+  );
+}
+
+export function App() {
+  const data = useLoaderData<typeof loader>();
+  const [theme] = useTheme();
+
+  return (
+    <html lang="en" className={clsx(theme)}>
+      <head>
+        <meta charSet="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <Meta />
+        <PreventFlashOnWrongTheme ssrTheme={Boolean(data?.theme)} />
+        <Links />
+      </head>
+      <body className="bg-background text-foreground">
+        <main className="w-[1000px] mx-auto">
+          <Navigation />
+          <Outlet />
+        </main>
+        <ScrollRestoration />
+        <Scripts />
+        <LiveReload />
+      </body>
+    </html>
   );
 }

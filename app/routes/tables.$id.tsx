@@ -1,36 +1,36 @@
 import { useLoaderData } from "@remix-run/react";
 import { prisma } from "~/.server/prisma/prisma";
-import { ActionFunctionArgs, json, LoaderFunctionArgs } from "@remix-run/node";
+import { json, LoaderFunctionArgs } from "@remix-run/node";
 import { Button } from "~/components/ui/button";
 import { requireUserId } from "~/.server/auth";
-import { leaveSeat, seatPlayer } from "~/.server/prisma/tables";
 import { Avatar, AvatarImage, AvatarFallback } from "~/components/ui/avatar";
 import invariant from "tiny-invariant";
 import React from "react";
 import { wsContext } from "~/ws.context";
 import { Chat } from "~/components/Chat";
+import { PokerGameState } from "~/lib/poker/functional/pokerGame";
 
-export async function action({ request, params }: ActionFunctionArgs) {
-  const userId = await requireUserId(request);
-  const user = await prisma.user.findUnique({
-    where: {
-      id: userId,
-    },
-  });
-  invariant(user, "User not found");
-  const tableId = params.id;
-  invariant(tableId, "Table not found");
-
-  const formData = await request.formData();
-  const action = formData.get("action");
-  if (action === "sit") {
-    await seatPlayer(tableId, user.id);
-  } else if (action === "leave") {
-    await leaveSeat(user);
-  }
-
-  return null;
-}
+// export async function action({ request, params }: ActionFunctionArgs) {
+//   const userId = await requireUserId(request);
+//   const user = await prisma.user.findUnique({
+//     where: {
+//       id: userId,
+//     },
+//   });
+//   invariant(user, "User not found");
+//   const tableId = params.id;
+//   invariant(tableId, "Table not found");
+//
+//   const formData = await request.formData();
+//   const action = formData.get("action");
+//   if (action === "sit") {
+//     await seatPlayer(tableId, user.id);
+//   } else if (action === "leave") {
+//     await leaveSeat(user);
+//   }
+//
+//   return null;
+// }
 
 export async function loader({ params, request }: LoaderFunctionArgs) {
   const userId = await requireUserId(request);
@@ -64,19 +64,33 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 
 export default function Table() {
   const { table, user } = useLoaderData<typeof loader>();
+  const [gameState, setGameState] = React.useState<PokerGameState>();
   // const updatedTable = useActionData<typeof action>()
   console.log(table);
 
   const socket = React.useContext(wsContext);
   React.useEffect(() => {
-    if (!socket) return;
+    console.log("in table.$id socket effect");
+    if (!socket) {
+      console.log("no socket in table.$id");
+      return;
+    }
 
-    socket.on("event", (data) => {
-      console.log(data);
+    socket.on("update game state", (gameState) => {
+      console.log("in update game state");
+      console.log(gameState);
+      setGameState(gameState);
     });
 
-    socket.emit("something", "ping");
+    // socket.on("start game", (msg) => {
+    //   console.log("Table ID:", msg.tableId);
+    //   console.log("Message Content:", msg.message);
+    // });
   }, [socket]);
+
+  React.useEffect(() => {
+    console.log(gameState);
+  }, [gameState]);
 
   const joinTable = async () => {
     if (!socket) return;

@@ -67,12 +67,9 @@ authenticator.use(
       throw new Error("Invalid credentials");
     }
 
-    // // Get the users avatar from the cloudflare worker
-    // if (user.avatar) {
-    //     const avatarKey = user.avatar
-    //
-    //     user.avatar = `${process.env.CLOUDFLARE_WORKER_URL}${avatarKey}`
-    // }
+    // Get the users avatar from the cloudflare worker
+    const avatarKey = user.avatar;
+    user.avatar = `${process.env.CLOUDFLARE_WORKER_URL}${avatarKey}`;
 
     return user;
   }),

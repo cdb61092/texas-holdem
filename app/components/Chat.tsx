@@ -20,6 +20,9 @@ export function Chat({ tableId, user }: ChatProps) {
   const [message, setMessage] = React.useState<string>("");
   const [messages, setMessages] = React.useState<ChatMessage[]>([]);
 
+  console.log("tableId in Chat.tsx", tableId);
+  console.log("user in Chat.tsx", user);
+
   React.useEffect(() => {
     if (!socket) {
       console.log("Socket not initialized");
@@ -29,8 +32,15 @@ export function Chat({ tableId, user }: ChatProps) {
     socket.emit("join room", tableId);
 
     socket.on("chat message", (msg) => {
+      console.log("in chat message");
       setMessages((prevMessages) => [...prevMessages, msg]);
     });
+
+    // socket.on("start game", (msg) => {
+    //   console.log("in start game");
+    //   console.log(msg);
+    //   setMessages((prevMessages) => [...prevMessages, msg.message]);
+    // });
 
     return () => {
       socket.off("chat message");
@@ -38,6 +48,7 @@ export function Chat({ tableId, user }: ChatProps) {
   }, [socket, tableId]);
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    console.log("in handlesubmit send msg");
     event.preventDefault();
     if (!socket) {
       console.log("Socket is not initialized");
@@ -46,6 +57,8 @@ export function Chat({ tableId, user }: ChatProps) {
     socket.emit("chat message", { tableId, message, user }); // Assuming senderId is known
     setMessage("");
   }
+
+  console.log(messages);
 
   return (
     <div>

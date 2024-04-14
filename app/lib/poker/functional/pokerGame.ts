@@ -20,7 +20,7 @@ type Seat = {
   number: number;
 };
 
-type PokerGameState = {
+export type PokerGameState = {
   players: Player[];
   seats: Seat[];
   deck: Deck;
