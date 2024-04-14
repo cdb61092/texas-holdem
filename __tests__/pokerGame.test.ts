@@ -1,5 +1,5 @@
-import { PokerGame } from "../app/lib/pokerGame";
-import { Player } from "../app/lib/player";
+import { PokerGame } from "~/lib/poker/class/pokerGame";
+import { Player } from "~/lib/poker/class/player";
 
 describe("PokerGame", () => {
   test("should throw an error when fewer than 2 players are provided", () => {
@@ -21,7 +21,5 @@ describe("PokerGame", () => {
     });
   });
 
-  test("start game", async () => {
-
-  })
+  test("start game", async () => {});
 });

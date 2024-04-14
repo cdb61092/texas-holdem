@@ -1,5 +1,5 @@
-import { Deck } from "../app/lib/deck";
-import { Card } from "../app/lib/card";
+import { Deck } from "~/lib/poker/class/deck";
+import { Card } from "~/lib/poker/class/card";
 
 describe("Deck", () => {
   let deck: Deck;
