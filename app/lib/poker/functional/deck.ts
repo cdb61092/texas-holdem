@@ -1,16 +1,32 @@
+type Suit = "Hearts" | "Diamonds" | "Clubs" | "Spades";
+type Rank =
+  | "2"
+  | "3"
+  | "4"
+  | "5"
+  | "6"
+  | "7"
+  | "8"
+  | "9"
+  | "10"
+  | "Jack"
+  | "Queen"
+  | "King"
+  | "Ace";
+
 type Card = {
-  suit: string;
-  rank: string;
+  suit: Suit;
+  rank: Rank;
 };
 
-type DeckFunctional = Card[];
+type Deck = Card[];
 
 // Create a card object with a suit and rank.
-const createCard = (suit: string, rank: string): Card => ({ suit, rank });
+const createCard = (suit: Suit, rank: Rank): Card => ({ suit, rank });
 
-const createDeck = (): DeckFunctional => {
-  const suits = ["Hearts", "Diamonds", "Clubs", "Spades"];
-  const ranks = [
+const newDeck = (): Deck => {
+  const suits: Suit[] = ["Hearts", "Diamonds", "Clubs", "Spades"];
+  const ranks: Rank[] = [
     "2",
     "3",
     "4",
@@ -26,12 +42,16 @@ const createDeck = (): DeckFunctional => {
     "Ace",
   ];
 
+  const deck = suits.flatMap((suit) =>
+    ranks.map((rank) => createCard(suit, rank)),
+  );
+
   // Cross join the cards and suits to create a deck of cards
-  return suits.flatMap((suit) => ranks.map((rank) => createCard(suit, rank)));
+  return shuffleDeck(deck);
 };
 
 // Fisher-Yates shuffle algorithm
-const shuffleDeck = (deck: DeckFunctional): DeckFunctional => {
+const shuffleDeck = (deck: Deck): Deck => {
   // Clone the deck to avoid mutating the original array
   const shuffledDeck = [...deck];
 
@@ -45,13 +65,13 @@ const shuffleDeck = (deck: DeckFunctional): DeckFunctional => {
   return shuffledDeck;
 };
 
-const dealCard = (deck: DeckFunctional) => {
+const dealCard = (deck: Deck) => {
   // Grab the top card from the deck and return it along with the remaining deck
   const [card, ...remainingDeck] = deck;
   return { card, remainingDeck };
 };
 
-export { createDeck, shuffleDeck, dealCard };
+export { newDeck, shuffleDeck, dealCard, type Card, type Deck };
 
 // Usage
 // let deck = createDeck();
